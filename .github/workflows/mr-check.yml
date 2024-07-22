@@ -1,0 +1,20 @@
+name: Merge request checking
+
+on:
+  workflow_call:
+  push:
+    branches:
+      - main
+      - github-action-dev
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  analyzing:
+    uses: ./.github/workflows/_analyze.yml
+
+  testing:
+    uses: ./.github/workflows/_test.yml
+    with:
+      with-artifact: true

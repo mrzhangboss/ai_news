@@ -1,0 +1,26 @@
+name: Test CI
+
+on:
+  workflow_call:
+    inputs:
+      with-artifact:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  unittest:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_flutter
+      - run: |
+          set -o pipefail
+          flutter test --machine | tee test_report.log
+          set +o pipefail
+      - uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: flutter-unitTest-output
+          path: test_report.log
