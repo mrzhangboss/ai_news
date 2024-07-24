@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../models/news.dart';
@@ -15,6 +17,8 @@ class DetailPage extends StatefulWidget {
 class _DetailPageState extends State<DetailPage> {
   late WebViewController _controller;
 
+  bool visible = false;
+
   @override
   void initState() {
     super.initState();
@@ -27,6 +31,12 @@ class _DetailPageState extends State<DetailPage> {
           // Update loading bar.
         },
       ));
+  }
+
+  void toggleShow() {
+    setState(() {
+      visible = !visible;
+    });
   }
 
   @override
@@ -44,19 +54,13 @@ class _DetailPageState extends State<DetailPage> {
           children: [
             // image
 
-            news.imageUrl.isEmpty
-                ? Container()
-                : Image.network(
-                    news.imageUrl,
-                    width: double.infinity,
-                    height: 200,
-                    fit: BoxFit.cover,
-                  ),
-
             // description
             const SizedBox(height: 20),
 
             Text(news.description,
+                maxLines: visible ? null : 2,
+                overflow:
+                    visible ? TextOverflow.visible : TextOverflow.ellipsis,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onBackground,
                   fontSize: 16,

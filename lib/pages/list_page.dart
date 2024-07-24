@@ -2,6 +2,7 @@ import 'package:ai_news/components/hot_item_tile.dart';
 import 'package:flutter/material.dart';
 
 import '../models/news.dart';
+import '../services/ai_services.dart';
 import '../services/new_services.dart';
 
 class ListPage extends StatefulWidget {
@@ -15,6 +16,7 @@ class _ListPageState extends State<ListPage> {
   List<News> _news = [];
 
   NewsService _newsService = NewsService();
+  AiServices _aiServer = AiServices(token: '', robotId: '');
 
   @override
   void initState() {
@@ -23,10 +25,17 @@ class _ListPageState extends State<ListPage> {
   }
 
   void _fetchNews() async {
-    var news = await _newsService.getNews();
-    setState(() {
-      _news = news;
-    });
+    try {
+      var news = await _newsService.getNews();
+      // news = await _aiServer.getAiResponse(news);
+      setState(() {
+        _news = news;
+      });
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("error: ${e.toString()}")));
+    }
   }
 
   @override
@@ -44,7 +53,7 @@ class _ListPageState extends State<ListPage> {
                 size: 32,
                 color: Theme.of(context).colorScheme.primary,
               ),
-              Text("AI News",
+              const Text("AI News",
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold))
             ],
           ),

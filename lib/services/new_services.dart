@@ -11,9 +11,10 @@ class NewsService {
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
     };
     print('begin');
+
     final response = await http.get(
         Uri.parse(
-            'https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=2&desktop=true'),
+            'https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=50&desktop=true'),
         headers: headers);
 
     if (response.statusCode == 200) {
@@ -25,7 +26,9 @@ class NewsService {
           articles.length, (index) => News.fromJson(articles[index]));
     } else {
       print('end ${response.statusCode}');
-      throw new Exception('Failed to load news');
+
+      throw Exception(
+          'Failed to load news ${response.statusCode} : ${response.body}');
     }
   }
 }
