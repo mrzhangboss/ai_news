@@ -10,7 +10,7 @@ class NewsService {
       'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
     };
-    print('begin');
+  print('begin');
 
     final response = await http.get(
         Uri.parse(
@@ -22,8 +22,8 @@ class NewsService {
       print(responseBody);
       final jsonData = json.decode(responseBody);
       final articles = jsonData['data'] as List<dynamic>;
-      return List.generate(
-          articles.length, (index) => News.fromJson(articles[index]));
+      return List.generate(articles.length,
+          (index) => ZhiHuNews.fromJson(articles[index], index + 1));
     } else {
       print('end ${response.statusCode}');
 

@@ -1,9 +1,14 @@
 import 'package:ai_news/pages/detail_page.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
 
 import 'pages/list_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  // Hive.registerAdapter(ToDoAdapter());
   runApp(const MyApp());
 }
 

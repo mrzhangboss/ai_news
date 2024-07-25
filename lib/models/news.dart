@@ -1,41 +1,58 @@
 class News {
   final String title;
   final String description;
-  final String imageUrl;
+  final String? imageUrl;
   final String url;
   final String author;
-  final String hot;
+  final String? trade;
+  final int createAt;
 
   const News({
     required this.title,
+    required this.createAt,
     required this.description,
     required this.imageUrl,
     required this.url,
     required this.author,
-    required this.hot,
+    required this.trade,
   });
+}
 
-  static String convertZhihuApiUrl(String url) {
-    final regExp = RegExp(r'https:\/\/api\.zhihu\.com\/questions\/(\d+)');
-    final match = regExp.firstMatch(url);
+class ZhiHuNews extends News {
+  final String id;
+  final String hot;
+  final int rank;
 
-    if (match != null && match.groupCount == 1) {
-      final questionId = match.group(1);
-      return 'https://zhihu.com/question/$questionId';
-    }
+  const ZhiHuNews(
+      {required super.createAt,
+      required this.id,
+      required this.rank,
+      required super.title,
+      required super.description,
+      required super.trade,
+      required super.imageUrl,
+      required super.url,
+      required super.author,
+      required this.hot});
 
-    // 如果匹配不成功，返回原始 URL
-    return url;
+  static String convertReadApiUrl(String questionId) {
+    return 'https://zhihu.com/question/$questionId';
   }
 
-  factory News.fromJson(Map<String, dynamic> json) {
-    return News(
-        title: json['target']['title'],
-        description: json['target']['excerpt'],
-        imageUrl:
-            json['children'].isNotEmpty ? json['children'][0]['thumbnail'] : '',
-        url: convertZhihuApiUrl(json['target']['url']),
-        author: json['target']['author']['name'],
-        hot: json['detail_text']);
+  factory ZhiHuNews.fromJson(Map<String, dynamic> json, int rank) {
+    var questionId = json['target']['id'].toString();
+    return ZhiHuNews(
+      id: questionId,
+      rank: rank,
+      createAt: DateTime.now().millisecondsSinceEpoch,
+      title: json['target']['title'],
+      description: json['target']['excerpt'],
+      imageUrl:
+          json['children'].isNotEmpty ? json['children'][0]['thumbnail'] : null,
+      url: convertReadApiUrl(json['target']['id'].toString()),
+      author: json['target']['author']['name'],
+      hot: json['detail_text'],
+      trade: json['detail_text'],
+    );
   }
 }

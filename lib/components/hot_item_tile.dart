@@ -25,17 +25,17 @@ class HotItemTile extends StatelessWidget {
           ),
           title: Text(news.title),
           subtitle: Text(
-            news.hot,
+            news.trade ?? "",
             style: const TextStyle(
               color: Colors.grey,
             ),
           ),
-          trailing: news.imageUrl.isEmpty
+          trailing: news.imageUrl == null
               ? null
               : ClipRRect(
                   borderRadius: BorderRadius.circular(2),
                   child: Image.network(
-                    news.imageUrl,
+                    news.imageUrl!,
                     width: 50,
                     height: 50,
                     fit: BoxFit.fill,
