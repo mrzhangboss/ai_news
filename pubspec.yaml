@@ -17,7 +17,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
-
+versionName: 1.0.1
 environment:
   sdk: '>=3.3.4 <4.0.0'
 
@@ -54,6 +54,10 @@ dependencies:
 
   flutter_slidable: ^3.1.0
 
+  r_upgrade: ^0.4.2
+  package_info_plus: ^8.0.0
+  connectivity_plus: ^6.0.3
+
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +73,8 @@ dev_dependencies:
   custom_lint: ^0.6.4
   freezed: ^2.5.2
   json_serializable: ^6.8.0
+
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
