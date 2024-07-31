@@ -4,18 +4,16 @@ import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 
-import 'model_adapters/juejin_news_adapter.dart';
-import 'model_adapters/toutiao_news_adapter.dart';
-import 'model_adapters/zhihu_news_adapter.dart';
+import 'model_adapters/comment_adapter.dart';
+import 'model_adapters/news_adapter.dart';
 import 'pages/list_page.dart';
 import 'services/data_services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  Hive.registerAdapter(ZhiHuNewsAdapter());
-  Hive.registerAdapter(ToutiaoAdapter());
-  Hive.registerAdapter(JuejinAdapter());
+  Hive.registerAdapter(NewsAdapter());
+  Hive.registerAdapter(CommentAdapter());
   runApp(const MyApp());
 }
 

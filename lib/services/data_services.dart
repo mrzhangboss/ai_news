@@ -1,18 +1,16 @@
-import 'package:ai_news/models/toutiao_news.dart';
-import 'package:ai_news/models/zhihu_news.dart';
+import 'package:ai_news/models/comment.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
-import '../models/juejin_news.dart';
+import '../models/constant.dart';
 import '../models/news.dart';
 
 class DataServices extends ChangeNotifier {
-  final String zhihuBoxKey = 'zhihu_box';
-  final String toutiaoBoxKey = 'toutiao_box';
-  final String juejinBoxKey = 'juejin_box';
-  late Box<ZhiHuNews> zhihuBox;
-  late Box<ToutiaoNews> toutiaoBox;
-  late Box<JuejinNews> juejinBox;
+  final String _historyBoxName = '_history';
+  final String _commentBoxName = '_comment';
+  late Box<News> _historyBox;
+  late Box<Comment> _commentBox;
+  List<NewsType> boxTypes = [NewsType.zhihu, NewsType.juejin, NewsType.toutiao];
   bool isBoxInitialized = false;
 
   DataServices() {
@@ -21,58 +19,106 @@ class DataServices extends ChangeNotifier {
   }
 
   _initBox() async {
-    zhihuBox = await Hive.openBox<ZhiHuNews>(zhihuBoxKey);
-    toutiaoBox = await Hive.openBox<ToutiaoNews>(toutiaoBoxKey);
-    juejinBox = await Hive.openBox<JuejinNews>(juejinBoxKey);
+    for (NewsType type in boxTypes) {
+      String boxName = getBoxName(type);
+      await Hive.openBox<News>(boxName);
+    }
+    _historyBox = await Hive.openBox<News>(_historyBoxName);
+    _commentBox = await Hive.openBox<Comment>(_commentBoxName);
+    // await _commentBox.clear();
     isBoxInitialized = true;
   }
 
+  String getBoxName(NewsType newsType) {
+    return newsType.toString().split(".").last;
+  }
+
   List<News> getCategoryNews(NewsType newsType) {
+    String boxName = getBoxName(newsType);
     if (!isBoxInitialized) {
-      print('isBoxInitialized is false $newsType');
       return [];
     }
-    switch (newsType) {
-      case NewsType.zhihu:
-        print('${zhihuBox.isOpen} zhihuBox.isOpen');
-        return zhihuBox.values.toList();
-      case NewsType.toutiao:
-        print('db size ${toutiaoBox.values.length}');
-        return toutiaoBox.values.toList();
-      case NewsType.juejin:
-        return juejinBox.values.toList();
-      default:
-        return [];
-    }
+    return Hive.box<News>(boxName).values.toList();
+  }
+
+  String getBoxKeyId(News news) {
+    return '${news.type.toString().split('.').last}-${news.id}';
   }
 
   void saveNews(List<News> news) async {
-    print('begin saveNews ${news.length}');
-    if (!isBoxInitialized || news.isEmpty) {
-      return;
-    }
     NewsType newsType = news.first.type;
-    switch (newsType) {
-      case NewsType.zhihu:
-        await zhihuBox.clear();
-        for (var item in news) {
-          await zhihuBox.add(item as ZhiHuNews);
-        }
-        break;
-      case NewsType.toutiao:
-        await toutiaoBox.clear();
-        for (var item in news) {
-          await toutiaoBox.add(item as ToutiaoNews);
-        }
-      case NewsType.juejin:
-        await juejinBox.clear();
-        for (var item in news) {
-          await juejinBox.add(item as JuejinNews);
-        }
-      default:
-        break;
+    String boxName = getBoxName(newsType);
+    var box = Hive.box<News>(boxName);
+    if (!box.isOpen) {
+      await Hive.openBox<News>(boxName);
+    }
+    await box.clear();
+    for (var item in news) {
+      var boxKeyId = getBoxKeyId(item);
+      if (_historyBox.containsKey(boxKeyId)) {
+        _historyBox.put(boxKeyId, item);
+      }
+      await box.put(boxKeyId, item);
     }
     notifyListeners();
     print('end saveNews');
+  }
+
+  Comment getComment(News news) {
+    if (!isBoxInitialized) {
+      return Comment(
+        type: news.type,
+        id: news.id,
+      );
+    }
+    String boxKeyId = getBoxKeyId(news);
+    if (_commentBox.containsKey(boxKeyId)) {
+      return _commentBox.get(boxKeyId)!;
+    }
+    var newComment = Comment(
+      type: news.type,
+      id: news.id,
+    );
+    _commentBox.put(boxKeyId, newComment);
+    return newComment;
+  }
+
+  bool isShow(News news) {
+    Comment comment = getComment(news);
+    return comment.isLiked == false;
+  }
+  bool isLiked(News news) {
+    Comment comment = getComment(news);
+    return comment.isLiked == true;
+  }
+
+
+  void likeNews(News news) async {
+    String boxKeyId = getBoxKeyId(news);
+    Comment comment = getComment(news);
+
+    await _commentBox.put(boxKeyId, comment.copyWith(isLiked: true));
+    notifyListeners();
+  }
+
+  void dislikeNews(News news) async {
+    String boxKeyId = getBoxKeyId(news);
+    Comment comment = getComment(news);
+
+    await _commentBox.put(boxKeyId, comment.copyWith(isLiked: false));
+    notifyListeners();
+  }
+
+  void readNews(News news) async {
+    String boxKeyId = getBoxKeyId(news);
+    Comment comment = getComment(news);
+
+    await _commentBox.put(
+        boxKeyId,
+        comment.copyWith(
+            readAt: DateTime.now(),
+            isRead: true,
+            readTimes: comment.readTimes + 1));
+    notifyListeners();
   }
 }

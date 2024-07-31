@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/constant.dart';
 import '../models/news.dart';
 import '../services/data_services.dart';
 import '../services/new_services.dart';
@@ -30,6 +31,26 @@ class _NewListState extends State<NewList> {
         (x) => Provider.of<DataServices>(context, listen: false).saveNews(x));
   }
 
+  void _likeNews(News news) async {
+    Provider.of<DataServices>(context, listen: false).likeNews(news);
+  }
+
+  void _disLikeNews(News news) async {
+    Provider.of<DataServices>(context, listen: false).dislikeNews(news);
+  }
+
+  void _readLikeNews(News news) async {
+    Provider.of<DataServices>(context, listen: false).readNews(news);
+  }
+
+  bool _isShowNews(News news) {
+    return Provider.of<DataServices>(context, listen: false).isShow(news);
+  }
+
+  bool _isLikedNews(News news) {
+    return Provider.of<DataServices>(context, listen: false).isLiked(news);
+  }
+
   @override
   Widget build(BuildContext context) {
     List<News> news = Provider.of<DataServices>(context, listen: true)
@@ -45,14 +66,21 @@ class _NewListState extends State<NewList> {
               : ListView.builder(
                   itemCount: news.length,
                   itemBuilder: (context, index) {
-                    return HotItemTile(
-                      news: news[index],
-                      index: index,
-                      onTap: () {
-                        Navigator.pushNamed(context, '/detail',
-                            arguments: news[index]);
-                      },
-                    );
+                    News n = news[index];
+                    return _isShowNews(n)
+                        ? Container()
+                        : HotItemTile(
+                            isLiked: _isLikedNews(n),
+                            news: n,
+                            index: index,
+                            onTap: () {
+                              _readLikeNews(n);
+                              Navigator.pushNamed(context, '/detail',
+                                  arguments: n);
+                            },
+                            onDeleted: (_) => _disLikeNews(n),
+                            onLiked: (_) => _likeNews(n),
+                          );
                   }))
     ]);
   }

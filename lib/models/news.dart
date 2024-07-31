@@ -1,50 +1,35 @@
-enum NewsType {
-  zhihu,
-  juejin,
-  weibo,
-  toutiao,
-  douyin,
-  bilibili,
-  twitter,
-  facebook,
-  instagram,
-  youtube,
-  tiktok,
-  reddit,
-  pinterest,
-  linkedin,
-  medium,
-  quora,
-  tumblr,
-  vine,
-  vimeo,
-  flickr,
-  imgur,
-  deviantart,
-  behance,
-  pixiv,
-  artstation,
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import 'constant.dart';
+
+part 'news.freezed.dart';
+
+part 'news.g.dart';
+
+
+@freezed
+class News with _$News {
+  const factory News({
+    required NewsType type,
+    required String id,
+    required String title,
+    required DateTime createAt,
+    @Default('') String description,
+    @Default('') String imageUrl,
+    required String url,
+    @Default('') String author,
+    @Default('') String authorAvatar,
+    @Default('') String note,
+    @Default('') String hot,
+    @Default('') String categories,
+    int? liked,
+    int? rank,
+    int? viewed,
+    int? collected,
+    int? commented,
+    int? interacted,
+    int? hotRank,
+  }) = _News;
+
+  factory News.fromJson(Map<String, Object?> json) => _$NewsFromJson(json);
 }
-
-class News {
-  final NewsType type;
-  final String title;
-  final String description;
-  final String? imageUrl;
-  final String url;
-  final String author;
-  final String? note;
-  final int createAt;
-
-  const News({
-    required this.type,
-    required this.title,
-    required this.createAt,
-    required this.description,
-    required this.imageUrl,
-    required this.url,
-    required this.author,
-    required this.note,
-  });
-}
-

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../components/new_list.dart';
+import '../models/constant.dart';
 import '../models/news.dart';
 import '../services/ai_services.dart';
 import '../services/new_services.dart';
