@@ -17,7 +17,8 @@ Future<void> checkUploadLatestVersion() async {
         final latestVersion = json['tag_name'];
         PackageInfo packageInfo = await PackageInfo.fromPlatform();
         String version = packageInfo.version;
-        if (latestVersion != version) {
+        String gitVersion = latestVersion.replaceAll('v', '').split('+').first;
+        if (gitVersion != version) {
           final apkUrl =
               "https://github.com/mrzhangboss/ai_news/releases/download/${latestVersion}/app-arm64-v8a-release.apk";
           int? id = await RUpgrade.upgrade(
