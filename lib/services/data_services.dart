@@ -73,9 +73,7 @@ class DataServices extends ChangeNotifier {
     await box.clear();
     for (var item in news) {
       var boxKeyId = getBoxKeyId(item);
-      if (_historyBox.containsKey(boxKeyId)) {
-        _historyBox.put(boxKeyId, item);
-      }
+      _historyBox.put(boxKeyId, item);
       await box.put(boxKeyId, item);
     }
     await _cacheDateBox.put(boxName, DateTime.now());

@@ -1,4 +1,4 @@
-# Released v1.2.4
+# Released v1.3.0
 
 1. test auto update
 
