@@ -31,7 +31,7 @@ class NewsService {
     }
   }
 
-  Future<List<News>> getNews(Function(List<News>)? callback) async {
+  Future<List<News>> getNews() async {
     final headers = {
       'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -46,9 +46,6 @@ class NewsService {
       final articles = parser.getArticles(response);
       List<News> news = List.generate(articles.length,
           (index) => parser.parseNews(articles[index], index + 1));
-      if (callback != null) {
-        callback(news);
-      }
       return news;
     } else {
       print('end ${response.statusCode}');

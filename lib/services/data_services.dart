@@ -8,8 +8,10 @@ import '../models/news.dart';
 class DataServices extends ChangeNotifier {
   final String _historyBoxName = '_history';
   final String _commentBoxName = '_comment';
+  final String _cacheDateBoxName = '_cache_date';
   late Box<News> _historyBox;
   late Box<Comment> _commentBox;
+  late Box<DateTime> _cacheDateBox;
   List<NewsType> boxTypes = [NewsType.zhihu, NewsType.juejin, NewsType.toutiao];
   bool isBoxInitialized = false;
 
@@ -25,12 +27,28 @@ class DataServices extends ChangeNotifier {
     }
     _historyBox = await Hive.openBox<News>(_historyBoxName);
     _commentBox = await Hive.openBox<Comment>(_commentBoxName);
+    _cacheDateBox = await Hive.openBox<DateTime>(_cacheDateBoxName);
     // await _commentBox.clear();
     isBoxInitialized = true;
   }
 
   String getBoxName(NewsType newsType) {
     return newsType.toString().split(".").last;
+  }
+
+  bool isNeedUpdate(NewsType newsType) {
+    if (!isBoxInitialized) {
+      return false;
+    }
+    DateTime? lastCacheTime = _cacheDateBox.get(getBoxName(newsType));
+    if (lastCacheTime == null) {
+      return true;
+    }
+    var now = DateTime.now();
+    if (now.isAfter(lastCacheTime.add(const Duration(seconds: 30)))) {
+      return true;
+    }
+    return false;
   }
 
   List<News> getCategoryNews(NewsType newsType) {
@@ -60,6 +78,7 @@ class DataServices extends ChangeNotifier {
       }
       await box.put(boxKeyId, item);
     }
+    await _cacheDateBox.put(boxName, DateTime.now());
     notifyListeners();
     print('end saveNews');
   }
@@ -87,11 +106,11 @@ class DataServices extends ChangeNotifier {
     Comment comment = getComment(news);
     return comment.isLiked == false;
   }
+
   bool isLiked(News news) {
     Comment comment = getComment(news);
     return comment.isLiked == true;
   }
-
 
   void likeNews(News news) async {
     String boxKeyId = getBoxKeyId(news);

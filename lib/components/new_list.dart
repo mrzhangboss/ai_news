@@ -27,8 +27,13 @@ class _NewListState extends State<NewList> {
   }
 
   void _fetchLatestNews() async {
-    await newsService.getNews(
-        (x) => Provider.of<DataServices>(context, listen: false).saveNews(x));
+    var provider = Provider.of<DataServices>(context, listen: false);
+
+    if (provider.isNeedUpdate(widget.newsType)) {
+      List<News> news = await newsService.getNews();
+      provider.saveNews(news);
+    }
+
   }
 
   void _likeNews(News news) async {
