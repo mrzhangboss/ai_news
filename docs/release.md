@@ -1,5 +1,4 @@
-# Released v1.2.1
+# Released v1.2.3
 
-1. hot news
-2. like and dislike
-3. cache
+1. auto update
+
