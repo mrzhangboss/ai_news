@@ -52,6 +52,7 @@ Map<String, dynamic> _$$NewsImplToJson(_$NewsImpl instance) =>
     };
 
 const _$NewsTypeEnumMap = {
+  NewsType.recommend: 'recommend',
   NewsType.zhihu: 'zhihu',
   NewsType.juejin: 'juejin',
   NewsType.weibo: 'weibo',

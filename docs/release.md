@@ -1,4 +1,4 @@
-# Released v1.3.0
+# Released v2.0.0
 
-1. test auto update
+1. use ai 
 

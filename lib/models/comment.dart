@@ -17,6 +17,9 @@ class Comment with _$Comment {
     bool? isLiked,
     @Default(false) bool isClicked,
     @Default(0) int readTimes,
+    String? category,
+    int? like,
+    int? sort,
   }) = _Comment;
 
   factory Comment.fromJson(Map<String, Object?> json) =>

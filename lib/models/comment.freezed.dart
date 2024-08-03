@@ -28,6 +28,9 @@ mixin _$Comment {
   bool? get isLiked => throw _privateConstructorUsedError;
   bool get isClicked => throw _privateConstructorUsedError;
   int get readTimes => throw _privateConstructorUsedError;
+  String? get category => throw _privateConstructorUsedError;
+  int? get like => throw _privateConstructorUsedError;
+  int? get sort => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -47,7 +50,10 @@ abstract class $CommentCopyWith<$Res> {
       bool isRead,
       bool? isLiked,
       bool isClicked,
-      int readTimes});
+      int readTimes,
+      String? category,
+      int? like,
+      int? sort});
 }
 
 /// @nodoc
@@ -71,6 +77,9 @@ class _$CommentCopyWithImpl<$Res, $Val extends Comment>
     Object? isLiked = freezed,
     Object? isClicked = null,
     Object? readTimes = null,
+    Object? category = freezed,
+    Object? like = freezed,
+    Object? sort = freezed,
   }) {
     return _then(_value.copyWith(
       type: null == type
@@ -105,6 +114,18 @@ class _$CommentCopyWithImpl<$Res, $Val extends Comment>
           ? _value.readTimes
           : readTimes // ignore: cast_nullable_to_non_nullable
               as int,
+      category: freezed == category
+          ? _value.category
+          : category // ignore: cast_nullable_to_non_nullable
+              as String?,
+      like: freezed == like
+          ? _value.like
+          : like // ignore: cast_nullable_to_non_nullable
+              as int?,
+      sort: freezed == sort
+          ? _value.sort
+          : sort // ignore: cast_nullable_to_non_nullable
+              as int?,
     ) as $Val);
   }
 }
@@ -124,7 +145,10 @@ abstract class _$$CommentImplCopyWith<$Res> implements $CommentCopyWith<$Res> {
       bool isRead,
       bool? isLiked,
       bool isClicked,
-      int readTimes});
+      int readTimes,
+      String? category,
+      int? like,
+      int? sort});
 }
 
 /// @nodoc
@@ -146,6 +170,9 @@ class __$$CommentImplCopyWithImpl<$Res>
     Object? isLiked = freezed,
     Object? isClicked = null,
     Object? readTimes = null,
+    Object? category = freezed,
+    Object? like = freezed,
+    Object? sort = freezed,
   }) {
     return _then(_$CommentImpl(
       type: null == type
@@ -180,6 +207,18 @@ class __$$CommentImplCopyWithImpl<$Res>
           ? _value.readTimes
           : readTimes // ignore: cast_nullable_to_non_nullable
               as int,
+      category: freezed == category
+          ? _value.category
+          : category // ignore: cast_nullable_to_non_nullable
+              as String?,
+      like: freezed == like
+          ? _value.like
+          : like // ignore: cast_nullable_to_non_nullable
+              as int?,
+      sort: freezed == sort
+          ? _value.sort
+          : sort // ignore: cast_nullable_to_non_nullable
+              as int?,
     ));
   }
 }
@@ -195,7 +234,10 @@ class _$CommentImpl implements _Comment {
       this.isRead = false,
       this.isLiked,
       this.isClicked = false,
-      this.readTimes = 0});
+      this.readTimes = 0,
+      this.category,
+      this.like,
+      this.sort});
 
   factory _$CommentImpl.fromJson(Map<String, dynamic> json) =>
       _$$CommentImplFromJson(json);
@@ -219,10 +261,16 @@ class _$CommentImpl implements _Comment {
   @override
   @JsonKey()
   final int readTimes;
+  @override
+  final String? category;
+  @override
+  final int? like;
+  @override
+  final int? sort;
 
   @override
   String toString() {
-    return 'Comment(type: $type, id: $id, readAt: $readAt, updateAt: $updateAt, isRead: $isRead, isLiked: $isLiked, isClicked: $isClicked, readTimes: $readTimes)';
+    return 'Comment(type: $type, id: $id, readAt: $readAt, updateAt: $updateAt, isRead: $isRead, isLiked: $isLiked, isClicked: $isClicked, readTimes: $readTimes, category: $category, like: $like, sort: $sort)';
   }
 
   @override
@@ -240,13 +288,17 @@ class _$CommentImpl implements _Comment {
             (identical(other.isClicked, isClicked) ||
                 other.isClicked == isClicked) &&
             (identical(other.readTimes, readTimes) ||
-                other.readTimes == readTimes));
+                other.readTimes == readTimes) &&
+            (identical(other.category, category) ||
+                other.category == category) &&
+            (identical(other.like, like) || other.like == like) &&
+            (identical(other.sort, sort) || other.sort == sort));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, type, id, readAt, updateAt,
-      isRead, isLiked, isClicked, readTimes);
+      isRead, isLiked, isClicked, readTimes, category, like, sort);
 
   @JsonKey(ignore: true)
   @override
@@ -271,7 +323,10 @@ abstract class _Comment implements Comment {
       final bool isRead,
       final bool? isLiked,
       final bool isClicked,
-      final int readTimes}) = _$CommentImpl;
+      final int readTimes,
+      final String? category,
+      final int? like,
+      final int? sort}) = _$CommentImpl;
 
   factory _Comment.fromJson(Map<String, dynamic> json) = _$CommentImpl.fromJson;
 
@@ -291,6 +346,12 @@ abstract class _Comment implements Comment {
   bool get isClicked;
   @override
   int get readTimes;
+  @override
+  String? get category;
+  @override
+  int? get like;
+  @override
+  int? get sort;
   @override
   @JsonKey(ignore: true)
   _$$CommentImplCopyWith<_$CommentImpl> get copyWith =>

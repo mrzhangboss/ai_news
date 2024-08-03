@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/comment.dart';
 import '../models/constant.dart';
 import '../models/news.dart';
 import '../services/data_services.dart';
 import '../services/new_services.dart';
 import 'hot_item_tile.dart';
+import 'my_tag.dart';
 
 class NewList extends StatefulWidget {
   final NewsType newsType;
@@ -18,75 +20,105 @@ class NewList extends StatefulWidget {
 
 class _NewListState extends State<NewList> {
   late NewsService newsService;
+  bool isLoading = false;
+  String currentTag = "";
 
   @override
   void initState() {
     super.initState();
     newsService = NewsService(newsType: widget.newsType);
-    _fetchLatestNews();
+    _fetchLatestNews(false);
   }
 
-  void _fetchLatestNews() async {
+  Future<void> _fetchLatestNews([bool force = true]) async {
+    if (isLoading) return;
+    isLoading = true;
     var provider = Provider.of<DataServices>(context, listen: false);
 
-    if (provider.isNeedUpdate(widget.newsType)) {
+    if (force && widget.newsType == NewsType.recommend) {
+      await provider.generateRecommendNews();
+    } else if (force || provider.isNeedUpdate(widget.newsType)) {
       List<News> news = await newsService.getNews();
       provider.saveNews(news);
     }
-
+    setState(() {
+      isLoading = false;
+    });
   }
 
-  void _likeNews(News news) async {
-    Provider.of<DataServices>(context, listen: false).likeNews(news);
-  }
-
-  void _disLikeNews(News news) async {
-    Provider.of<DataServices>(context, listen: false).dislikeNews(news);
-  }
-
-  void _readLikeNews(News news) async {
-    Provider.of<DataServices>(context, listen: false).readNews(news);
+  void _clickNews(News news) async {
+    Provider.of<DataServices>(context, listen: false).clickNews(news);
   }
 
   bool _isShowNews(News news) {
     return Provider.of<DataServices>(context, listen: false).isShow(news);
   }
 
-  bool _isLikedNews(News news) {
-    return Provider.of<DataServices>(context, listen: false).isLiked(news);
-  }
-
   @override
   Widget build(BuildContext context) {
-    List<News> news = Provider.of<DataServices>(context, listen: true)
-        .getCategoryNews(widget.newsType);
+    DataServices provider = Provider.of<DataServices>(context, listen: true);
+    List<News> news = provider .getCategoryNews(widget.newsType);
+
     print('news size ${news.length}');
-    return Column(children: [
-      Expanded(
-          child: news.isEmpty
-              ? const Center(
-                  child: CircularProgressIndicator(
-                  color: Colors.blue,
-                ))
-              : ListView.builder(
-                  itemCount: news.length,
+    List<String> tags = provider.tags;
+    return Container(
+      decoration: BoxDecoration(color: Colors.grey[200]),
+      padding: const EdgeInsets.all(8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(children: [
+          Container(
+              height: 50,
+              child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.all(8.0),
+                  itemCount: tags.length,
                   itemBuilder: (context, index) {
-                    News n = news[index];
-                    return _isShowNews(n)
-                        ? Container()
-                        : HotItemTile(
-                            isLiked: _isLikedNews(n),
-                            news: n,
-                            index: index,
-                            onTap: () {
-                              _readLikeNews(n);
-                              Navigator.pushNamed(context, '/detail',
-                                  arguments: n);
-                            },
-                            onDeleted: (_) => _disLikeNews(n),
-                            onLiked: (_) => _likeNews(n),
-                          );
-                  }))
-    ]);
+                    return Container(
+                        child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          currentTag = tags[index];
+                        });
+                      },
+                      child: MyTag(
+                          tag: tags[index],
+                          isSelected: currentTag == tags[index]),
+                    ));
+                  })),
+          Expanded(
+              child: news.isEmpty
+                  ? const Center(child: Text("暂无数据"))
+                  : RefreshIndicator(
+                      onRefresh: _fetchLatestNews,
+                      child: ListView.builder(
+                          itemCount: news.length,
+                          itemBuilder: (context, index) {
+                            News n = news[index];
+                            Comment comment = Provider.of<DataServices>(context,
+                                    listen: false)
+                                .getComment(n);
+
+                            return _isShowNews(n) ||
+                                    (currentTag.isNotEmpty &&
+                                        comment.category != currentTag)
+                                ? Container()
+                                : HotItemTile(
+                                    isRecommendPage:
+                                        widget.newsType == NewsType.recommend,
+                                    news: n,
+                                    comment: comment,
+                                    index: index,
+                                    onTap: () {
+                                      _clickNews(n);
+                                      Navigator.pushNamed(context, '/detail',
+                                          arguments: n);
+                                    },
+                                  );
+                          }),
+                    ))
+        ]),
+      ),
+    );
   }
 }

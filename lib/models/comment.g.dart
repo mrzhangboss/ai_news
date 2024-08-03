@@ -20,6 +20,9 @@ _$CommentImpl _$$CommentImplFromJson(Map<String, dynamic> json) =>
       isLiked: json['isLiked'] as bool?,
       isClicked: json['isClicked'] as bool? ?? false,
       readTimes: (json['readTimes'] as num?)?.toInt() ?? 0,
+      category: json['category'] as String?,
+      like: (json['like'] as num?)?.toInt(),
+      sort: (json['sort'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$$CommentImplToJson(_$CommentImpl instance) =>
@@ -32,9 +35,13 @@ Map<String, dynamic> _$$CommentImplToJson(_$CommentImpl instance) =>
       'isLiked': instance.isLiked,
       'isClicked': instance.isClicked,
       'readTimes': instance.readTimes,
+      'category': instance.category,
+      'like': instance.like,
+      'sort': instance.sort,
     };
 
 const _$NewsTypeEnumMap = {
+  NewsType.recommend: 'recommend',
   NewsType.zhihu: 'zhihu',
   NewsType.juejin: 'juejin',
   NewsType.weibo: 'weibo',

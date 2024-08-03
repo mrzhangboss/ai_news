@@ -20,12 +20,14 @@ class ListPage extends StatefulWidget {
 
 class _ListPageState extends State<ListPage> {
   final List<Tab> myTabs = <Tab>[
+    const Tab(text: '推荐'),
     const Tab(text: '知乎'),
     const Tab(text: '头条'),
     const Tab(text: '掘金'),
   ];
 
   final List<NewsType> _newsTypes = [
+    NewsType.recommend,
     NewsType.zhihu,
     NewsType.toutiao,
     NewsType.juejin,

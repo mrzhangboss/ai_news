@@ -1,4 +1,5 @@
 enum NewsType {
+  recommend,
   zhihu,
   juejin,
   weibo,

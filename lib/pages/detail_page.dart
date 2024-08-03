@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../models/news.dart';
+import '../services/data_services.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage({
@@ -39,6 +42,17 @@ class _DetailPageState extends State<DetailPage> {
     });
   }
 
+  void _likeNews(_) {
+    final News news = ModalRoute.of(context)!.settings.arguments as News;
+
+    Provider.of<DataServices>(context, listen: false).likeNews(news);
+  }
+
+  void _disLikeNews(_) {
+    final News news = ModalRoute.of(context)!.settings.arguments as News;
+    Provider.of<DataServices>(context, listen: false).dislikeNews(news);
+  }
+
   @override
   Widget build(BuildContext context) {
     final News news = ModalRoute.of(context)!.settings.arguments as News;
@@ -68,9 +82,35 @@ class _DetailPageState extends State<DetailPage> {
                 )),
 
             Expanded(
-                child: WebViewWidget(
-              controller: _controller,
-            ))
+              child: Slidable(
+                  endActionPane: ActionPane(
+                    motion: const StretchMotion(),
+                    children: [
+                      SlidableAction(
+                        onPressed: _disLikeNews,
+                        backgroundColor: Colors.red,
+                        icon: Icons.thumb_down,
+                        label: 'Dislike',
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ],
+                  ),
+                  startActionPane: ActionPane(
+                    motion: const StretchMotion(),
+                    children: [
+                      SlidableAction(
+                        onPressed: _likeNews,
+                        backgroundColor: Colors.green,
+                        icon: Icons.thumb_up,
+                        label: 'Like',
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ],
+                  ),
+                  child: WebViewWidget(
+                    controller: _controller,
+                  )),
+            )
           ],
         ));
   }
