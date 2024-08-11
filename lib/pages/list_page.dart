@@ -14,8 +14,7 @@ class ListPage extends StatefulWidget {
 
 class _ListPageState extends State<ListPage> {
   static final List<ArticleType> _articleTypes = [
-    // ArticleType.all,
-
+    ArticleType.all,
     ArticleType.zhihu,
     ArticleType.zhihuDay,
     ArticleType.juejin,
