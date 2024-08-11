@@ -1,14 +1,8 @@
-import 'package:ai_news/components/hot_item_tile.dart';
-import 'package:ai_news/services/data_services.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:provider/provider.dart';
 
-import '../components/new_list.dart';
-import '../models/constant.dart';
-import '../models/news.dart';
-import '../services/ai_services.dart';
-import '../services/new_services.dart';
+import '../components/article_list.dart';
+import '../database/constant.dart';
 import '../utils/version_utils.dart';
 
 class ListPage extends StatefulWidget {
@@ -19,33 +13,46 @@ class ListPage extends StatefulWidget {
 }
 
 class _ListPageState extends State<ListPage> {
-  final List<Tab> myTabs = <Tab>[
-    const Tab(text: '推荐'),
-    const Tab(text: '知乎'),
-    const Tab(text: '头条'),
-    const Tab(text: '掘金'),
+
+
+    static final List<ArticleType> _articleTypes = [
+    ArticleType.all,
+    ArticleType.zhihu,
+    ArticleType.zhihuDay,
+    ArticleType.juejin,
+    ArticleType.weibo,
+    ArticleType.three6Ke,
+    ArticleType.bilibili,
+    ArticleType.baiduRD,
+    ArticleType.douyinHot,
+    ArticleType.douban,
+    ArticleType.huXiu,
+    ArticleType.woShiPm,
+    ArticleType.toutiao,
+    ArticleType.huPu,
   ];
 
-  final List<NewsType> _newsTypes = [
-    NewsType.recommend,
-    NewsType.zhihu,
-    NewsType.toutiao,
-    NewsType.juejin,
-  ];
+  late List<Tab> myTabs;
+  
+  final List<GlobalKey> tabKeys = List.generate(_articleTypes.length, (index) => GlobalKey());
 
   @override
   void initState() {
     super.initState();
   }
 
-
-
-  Widget buildTabBarView(NewsType newsType) {
-    return NewList(newsType: newsType);
+  Widget buildTabBarView(ArticleType articleType) {
+    return ArticleList(
+      key: tabKeys[_articleTypes.indexOf(articleType)],
+      type: articleType,
+    );
   }
+
+
 
   @override
   Widget build(BuildContext context) {
+    myTabs = List.generate(_articleTypes.length, (index) => Tab(text: articleTypeToString(_articleTypes[index])));
     return DefaultTabController(
       length: myTabs.length,
       child: Scaffold(
@@ -69,7 +76,7 @@ class _ListPageState extends State<ListPage> {
           ],
         ),
         body: TabBarView(
-          children: _newsTypes.map(buildTabBarView).toList(),
+          children: _articleTypes.map(buildTabBarView).toList(),
         ),
       ),
     );

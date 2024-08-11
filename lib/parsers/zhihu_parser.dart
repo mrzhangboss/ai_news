@@ -1,5 +1,7 @@
 import 'package:ai_news/models/news.dart';
 
+import '../database/article_model.dart';
+import '../database/constant.dart';
 import '../models/constant.dart';
 import 'base_parser.dart';
 
@@ -14,21 +16,18 @@ class ZhihuParser extends BaseParser {
   }
 
   @override
-  News parseNews(Map<String, dynamic> json, int rank) {
-    var questionId = json['target']['id'].toString();
-    return News(
-      id: questionId,
-      rank: rank,
-      createAt: DateTime.now(),
-      title: json['target']['title'],
-      description: json['target']['excerpt'],
-      imageUrl:
-          json['children'].isNotEmpty ? json['children'][0]['thumbnail'] : null,
-      url: convertReadApiUrl(json['target']['id'].toString()),
-      author: json['target']['author']['name'],
-      hot: json['detail_text'],
-      note: json['detail_text'],
-      type: NewsType.zhihu,
-    );
+  Article parseArticle(Map<String, dynamic> json, int rank) {
+    final content = ArticleContent()
+      .. description = json['target']['excerpt']
+      ..backgroundIcon = json['children'].isNotEmpty && json['children'][0]['thumbnail'].isNotEmpty ? json['children'][0]['thumbnail']  : null
+      ..author = json['target']['author']['name'];
+    final article = Article()
+      ..type = ArticleType.zhihu
+      ..rank = rank
+      ..title = json['target']['title']
+      ..url = convertReadApiUrl(json['target']['id'].toString())
+      ..content = content
+      ..hot = json['detail_text'];
+    return article;
   }
 }

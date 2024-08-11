@@ -1,47 +1,59 @@
 import 'package:ai_news/pages/detail_page.dart';
+import 'package:ai_news/pages/hate_page.dart';
+import 'package:ai_news/pages/love_page.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/adapters.dart';
+import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
 
-import 'model_adapters/comment_adapter.dart';
-import 'model_adapters/news_adapter.dart';
+import 'pages/index_page.dart';
 import 'pages/list_page.dart';
+import 'providers/article_provider.dart';
+import 'providers/tag_provider.dart';
 import 'services/data_services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapter(NewsAdapter());
-  Hive.registerAdapter(CommentAdapter());
-  runApp(const MyApp());
+
+  Isar isar = await DataServices.initDatabase();
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (context) => TagProvider(isar)),
+    ChangeNotifierProvider(create: (context) => ArticleProvider(isar)),
+  ], child: const MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+
+  @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => DataServices(),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'AI News',
-        theme: ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.light,
-          colorScheme: ColorScheme.light(
-              background: Colors.grey.shade300,
-              primary: Colors.grey.shade200,
-              secondary: Colors.white,
-              inversePrimary: Colors.grey.shade700),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'AI News',
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        colorScheme: const ColorScheme.light(
+          // background: Colors.grey.shade300,
+          // primary: Colors.grey.shade200,
+          // secondary: Colors.white,
+          // inversePrimary: Colors.grey.shade700
         ),
-        home: ListPage(),
-        routes: {
-          '/list': (context) => ListPage(),
-          '/detail': (context) => DetailPage(),
-        },
       ),
+      home: const IndexPage(),
+      routes: {
+        '/index': (context) => const IndexPage(),
+        '/list': (context) => const ListPage(),
+        '/detail': (context) => const DetailPage(),
+        '/love': (context) => const LovePage(),
+        '/hate': (context) => const HatePage(),
+      },
     );
   }
 }

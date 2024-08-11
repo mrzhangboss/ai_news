@@ -1,3 +1,4 @@
+import 'package:ai_news/providers/tag_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -5,7 +6,11 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../components/multi_select_checkbox_list.dart';
+import '../database/article_model.dart';
+import '../database/constant.dart';
 import '../models/news.dart';
+import '../providers/article_provider.dart';
 import '../services/data_services.dart';
 
 class DetailPage extends StatefulWidget {
@@ -21,6 +26,8 @@ class _DetailPageState extends State<DetailPage> {
   late WebViewController _controller;
 
   bool visible = false;
+  late Article article;
+  bool loaded = false;
 
   @override
   void initState() {
@@ -36,33 +43,130 @@ class _DetailPageState extends State<DetailPage> {
       ));
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    loaded = false;
+  }
+
   void toggleShow() {
     setState(() {
       visible = !visible;
     });
   }
 
-  void _likeNews(_) {
-    final News news = ModalRoute.of(context)!.settings.arguments as News;
-
-    Provider.of<DataServices>(context, listen: false).likeNews(news);
+  Future<void> likeArticle(
+      Article article, ArticleCategory? articleCategory) async {
+    if (article.status == ArticleStatus.like) {
+      await Provider.of<ArticleProvider>(context, listen: false)
+          .cancelLikeOrDislikeArticle(article);
+    } else {
+      await Provider.of<ArticleProvider>(context, listen: false)
+          .likeArticle(article);
+      if (articleCategory != null && articleCategory.categories.isNotEmpty) {
+        showTagAdd(OpinionType.like, articleCategory.categories);
+      }
+    }
+    setState(() {});
   }
 
-  void _disLikeNews(_) {
-    final News news = ModalRoute.of(context)!.settings.arguments as News;
-    Provider.of<DataServices>(context, listen: false).dislikeNews(news);
+  List<String> selectedTags = [];
+
+  void showTagAdd(OpinionType opinionType, List<String> options) async {
+    selectedTags = [];
+    await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+                title: const Text('标签'),
+                content: MultiSelectCheckboxList(
+                  options: options,
+                  onChange: (List<String> tags) {
+                    selectedTags = tags;
+                  },
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      if (selectedTags.isNotEmpty) {
+                        Provider.of<TagProvider>(context, listen: false)
+                            .addTags(selectedTags, opinionType);
+                      }
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('添加标签'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('取消'),
+                  )
+                ]));
+  }
+
+  Future<void> dislikeArticle(
+      Article article, ArticleCategory? articleCategory) async {
+    if (article.status == ArticleStatus.dislike) {
+      await Provider.of<ArticleProvider>(context, listen: false)
+          .cancelLikeOrDislikeArticle(article);
+    } else {
+      await Provider.of<ArticleProvider>(context, listen: false)
+          .dislikeArticle(article);
+      if (articleCategory != null && articleCategory.categories.isNotEmpty) {
+        showTagAdd(OpinionType.dislike, articleCategory.categories);
+      }
+    }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final News news = ModalRoute.of(context)!.settings.arguments as News;
-    print(news.url);
-    _controller.loadRequest(Uri.parse(news.url));
+    final ArticleRank articleRank =
+        ModalRoute.of(context)!.settings.arguments as ArticleRank;
+    if (articleRank.article.value == null) {
+      articleRank.article.loadSync();
+    }
+    article = articleRank.article.value!;
+    if (!loaded) {
+      loaded = true;
+      _controller.loadRequest(Uri.parse(article.url));
+    }
+    print(article.url);
 
     return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.background,
         appBar: AppBar(
-          title: Text(news.title),
+          title: Hero(
+              tag: article.id,
+              child: Material(
+                  child: Text(
+                article.title,
+                overflow: TextOverflow.ellipsis,
+              ))),
+          actions: [
+            IconButton(
+              onPressed: () async {
+                likeArticle(article, article.category);
+              },
+              icon: Icon(
+                Icons.thumb_up,
+                color: article.status == ArticleStatus.like
+                    ? Colors.green
+                    : Colors.grey,
+              ),
+            ),
+            IconButton(
+              onPressed: () async {
+                dislikeArticle(article, article.category);
+              },
+              icon: Icon(
+                Icons.thumb_down,
+                color: article.status == ArticleStatus.dislike
+                    ? Colors.red
+                    : Colors.grey,
+              ),
+            )
+          ],
         ),
         body: Column(
           children: [
@@ -71,7 +175,7 @@ class _DetailPageState extends State<DetailPage> {
             // description
             const SizedBox(height: 20),
 
-            Text(news.description,
+            Text(article.content.description ?? "",
                 maxLines: visible ? null : 2,
                 overflow:
                     visible ? TextOverflow.visible : TextOverflow.ellipsis,
@@ -82,34 +186,9 @@ class _DetailPageState extends State<DetailPage> {
                 )),
 
             Expanded(
-              child: Slidable(
-                  endActionPane: ActionPane(
-                    motion: const StretchMotion(),
-                    children: [
-                      SlidableAction(
-                        onPressed: _disLikeNews,
-                        backgroundColor: Colors.red,
-                        icon: Icons.thumb_down,
-                        label: 'Dislike',
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ],
-                  ),
-                  startActionPane: ActionPane(
-                    motion: const StretchMotion(),
-                    children: [
-                      SlidableAction(
-                        onPressed: _likeNews,
-                        backgroundColor: Colors.green,
-                        icon: Icons.thumb_up,
-                        label: 'Like',
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ],
-                  ),
-                  child: WebViewWidget(
-                    controller: _controller,
-                  )),
+              child: WebViewWidget(
+                controller: _controller,
+              ),
             )
           ],
         ));
