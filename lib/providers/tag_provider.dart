@@ -18,21 +18,25 @@ class TagProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
-
   // 添加标签
   void addTag(String tag, [OpinionType opinionType = OpinionType.neutral]) {
-    final newTag = Tag()..tagName = tag .. opinion = opinionType;
+    final newTag = Tag()
+      ..tagName = tag
+      ..opinion = opinionType;
     isar.writeTxnSync(() async {
       isar.tags.putSync(newTag);
     });
     notifyListeners();
   }
+
   // 添加标签
-  void addTags(List<String> tag, [OpinionType opinionType = OpinionType.neutral]) {
+  void addTags(List<String> tag,
+      [OpinionType opinionType = OpinionType.neutral]) {
     isar.writeTxnSync(() async {
       for (var tag in tag) {
-        final newTag = Tag()..tagName = tag .. opinion = opinionType;
+        final newTag = Tag()
+          ..tagName = tag
+          ..opinion = opinionType;
         isar.tags.putSync(newTag);
       }
     });
@@ -41,7 +45,7 @@ class TagProvider extends ChangeNotifier {
 
   // 获取所有标签
 
-  final defaultTags = ['科技', '军事', '财经', '体育', '娱乐'];
+  final defaultTags = ['', '科技', '军事', '财经', '体育', '娱乐'];
 
   List<Tag> getAllTags() {
     List<Tag> tag = isar.tags.where().findAllSync();

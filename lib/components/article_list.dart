@@ -1,4 +1,5 @@
 import 'package:ai_news/database/article_model.dart';
+import 'package:ai_news/providers/common_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,6 +7,7 @@ import '../database/constant.dart';
 import '../providers/article_provider.dart';
 import '../providers/tag_provider.dart';
 import 'article_tile.dart';
+import 'search_input.dart';
 import 'tag_list.dart';
 
 class ArticleList extends StatefulWidget {
@@ -72,6 +74,7 @@ class _ArticleListState extends State<ArticleList> {
   Widget build(BuildContext context) {
     final tagProvider = Provider.of<TagProvider>(context, listen: true);
     final model = Provider.of<ArticleProvider>(context, listen: false);
+    final String currentSearch = Provider.of<CommonProvider>(context, listen: true).currentSearch;
     final String currentTag = tagProvider.currentTag;
     return Container(
       decoration: BoxDecoration(color: Colors.grey[200]),
@@ -79,6 +82,7 @@ class _ArticleListState extends State<ArticleList> {
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(children: [
+          const SearchInput(),
           if (widget.type == ArticleType.all) const TagList(),
           Expanded(
               child: articles.isEmpty
@@ -103,7 +107,7 @@ class _ArticleListState extends State<ArticleList> {
                               article: article,
                               key: Key('${article.id}'),
                               showDislike: widget.showDislike,
-                              currentTag: currentTag,
+                              currentSearch: currentSearch,
                               isAll: widget.type == ArticleType.all,
                               onTap: () {
                                 model.clickedArticle(article, widget.type);

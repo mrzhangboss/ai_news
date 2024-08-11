@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'pages/index_page.dart';
 import 'pages/list_page.dart';
 import 'providers/article_provider.dart';
+import 'providers/common_provider.dart';
 import 'providers/tag_provider.dart';
 import 'services/data_services.dart';
 
@@ -18,6 +19,7 @@ void main() async {
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (context) => TagProvider(isar)),
     ChangeNotifierProvider(create: (context) => ArticleProvider(isar)),
+    ChangeNotifierProvider(create: (context) => CommonProvider()),
   ], child: const MyApp()));
 }
 

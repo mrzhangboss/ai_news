@@ -89,7 +89,7 @@ class _TagListState extends State<TagList> {
     var provider = Provider.of<TagProvider>(context, listen: true);
     List<Tag> tags = provider.getAllTags();
     return SizedBox(
-        height: 50,
+        height: 45,
         child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.all(8.0),

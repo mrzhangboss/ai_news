@@ -11,7 +11,7 @@ class ArticleTile extends _ArticleTile {
       required super.article,
       required super.isAll,
       super.onTap,
-      required super.currentTag,
+      required super.currentSearch,
       required super.showDislike});
 
   @override
@@ -25,7 +25,7 @@ class ArticleTile extends _ArticleTile {
               article: snapshot.data!,
               isAll: isAll,
               onTap: onTap,
-              currentTag: currentTag,
+              currentSearch: currentSearch,
               showDislike: showDislike,
             );
           } else {
@@ -34,7 +34,7 @@ class ArticleTile extends _ArticleTile {
               showDislike: showDislike,
               isAll: isAll,
               onTap: onTap,
-              currentTag: currentTag,
+              currentSearch: currentSearch,
             );
           }
         });
@@ -45,7 +45,7 @@ class _ArticleTile extends StatelessWidget {
   final Article article;
   final bool isAll;
   final bool showDislike;
-  final String currentTag;
+  final String currentSearch;
   final Function()? onTap;
 
   const _ArticleTile(
@@ -53,15 +53,13 @@ class _ArticleTile extends StatelessWidget {
       required this.article,
       required this.isAll,
       this.onTap,
-      required this.currentTag,
+      required this.currentSearch,
       required this.showDislike});
 
   @override
   Widget build(BuildContext context) {
     return (!showDislike && article.status == ArticleStatus.dislike) ||
-            (currentTag.isNotEmpty &&
-                (article.category == null ||
-                    !article.category!.categories.contains(currentTag)))
+            (currentSearch.isNotEmpty && !article.title.contains(currentSearch))
         ? Container(
             key: Key('${article.id}'),
           )

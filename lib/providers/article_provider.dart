@@ -15,10 +15,10 @@ import 'ai_provider.dart';
 
 class ArticleProvider extends ChangeNotifier {
   final Isar isar;
-  Queue<Article> queue = Queue();
-  int minSize = 30;
 
   ArticleProvider(this.isar);
+
+
 
   Stream<Article?> getArticleStream(int id) {
     return isar.articles.watchObject(id);
@@ -107,7 +107,6 @@ class ArticleProvider extends ChangeNotifier {
     }
     final res = await getRecommendArticles();
 
-
     // 获取当前未阅读的文章
     return res;
   }
@@ -122,20 +121,27 @@ class ArticleProvider extends ChangeNotifier {
     }
     saveLastCacheTime(cacheKey);
     // 获取当前未阅读的文章
-    List<Article> unreadArticles = await getArticleByStatus(ArticleStatus.unread, 50);
-    List<Article> clickedArticles = await getArticleByStatus(ArticleStatus.clicked, 10);
+    List<Article> unreadArticles =
+        await getArticleByStatus(ArticleStatus.unread, 50);
+    List<Article> clickedArticles =
+        await getArticleByStatus(ArticleStatus.clicked, 10);
     List<Article> dislikeArticles =
         await getArticleByStatus(ArticleStatus.dislike, 5);
     List<Article> likeArticles =
-    await getArticleByStatus(ArticleStatus.like, 5);
+        await getArticleByStatus(ArticleStatus.like, 5);
 
     List<Tag> normalTag = await getTagByType(OpinionType.neutral, 5);
     List<Tag> likeTag = await getTagByType(OpinionType.like, 10);
     List<Tag> dislikeTag = await getTagByType(OpinionType.dislike, 10);
 
-
     List<Article> articles = await AiProvider.getAiRecommend(
-        unreadArticles, clickedArticles, dislikeArticles, likeArticles, normalTag, likeTag, dislikeTag);
+        unreadArticles,
+        clickedArticles,
+        dislikeArticles,
+        likeArticles,
+        normalTag,
+        likeTag,
+        dislikeTag);
 
     // save
     if (articles.isNotEmpty) {
@@ -149,7 +155,6 @@ class ArticleProvider extends ChangeNotifier {
     lastRecommend = res;
     clearLastCacheTime(cacheKey);
     return res;
-
   }
 
   ZhihuParser zhihuParser = ZhihuParser();
@@ -270,7 +275,9 @@ class ArticleProvider extends ChangeNotifier {
       await isar.articles.put(article);
       for (var rank in ranks) {
         rank.typeReadTimes++;
-        if (type != ArticleType.all && type != ArticleType.like && type != ArticleType.dislike) {
+        if (type != ArticleType.all &&
+            type != ArticleType.like &&
+            type != ArticleType.dislike) {
           if (rank.rank < article.rank) {
             if (!rank.article.isLoaded) {
               await rank.article.load();
@@ -280,8 +287,6 @@ class ArticleProvider extends ChangeNotifier {
               lowerArticle.status = ArticleStatus.read;
               await isar.articles.put(lowerArticle);
             }
-
-
           }
         }
         await isar.articleRanks.put(rank);
