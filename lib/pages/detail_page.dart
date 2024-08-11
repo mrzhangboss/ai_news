@@ -37,8 +37,7 @@ class _DetailPageState extends State<DetailPage> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
-      ..setUserAgent(
-          "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36");
+      ..setUserAgent("Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36");
   }
 
   @override
@@ -132,6 +131,14 @@ class _DetailPageState extends State<DetailPage> {
 
   };
 
+  final Map<ArticleType, String> articleJS = {
+    ArticleType.zhihu: "document.getElementsByClassName('OpenInAppButton')[0].style.display='none'",
+  };
+
+  final Set<ArticleType> forbidJs = {
+    ArticleType.huXiu,
+  };
+
 
   @override
   Widget build(BuildContext context) {
@@ -169,9 +176,17 @@ class _DetailPageState extends State<DetailPage> {
           return NavigationDecision.navigate;
         }
         return NavigationDecision.prevent;
-      }));
-      if (article.type == ArticleType.bilibili) {
-        // _controller.setJavaScriptMode(JavaScriptMode.disabled);
+      },
+          onPageFinished: (url) async {
+            if (articleJS.containsKey(article.type)) {
+              await _controller.runJavaScript(articleJS[article.type]!);
+            }
+          }
+      ),
+
+      );
+      if (forbidJs.contains(article.type)) {
+        _controller.setJavaScriptMode(JavaScriptMode.disabled);
       } else {
         _controller.setJavaScriptMode(JavaScriptMode.unrestricted);
       }
