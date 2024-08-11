@@ -13,10 +13,9 @@ class ListPage extends StatefulWidget {
 }
 
 class _ListPageState extends State<ListPage> {
+  static final List<ArticleType> _articleTypes = [
+    // ArticleType.all,
 
-
-    static final List<ArticleType> _articleTypes = [
-    ArticleType.all,
     ArticleType.zhihu,
     ArticleType.zhihuDay,
     ArticleType.juejin,
@@ -33,8 +32,9 @@ class _ListPageState extends State<ListPage> {
   ];
 
   late List<Tab> myTabs;
-  
-  final List<GlobalKey> tabKeys = List.generate(_articleTypes.length, (index) => GlobalKey());
+
+  final List<GlobalKey> tabKeys =
+      List.generate(_articleTypes.length, (index) => GlobalKey());
 
   @override
   void initState() {
@@ -48,11 +48,10 @@ class _ListPageState extends State<ListPage> {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    myTabs = List.generate(_articleTypes.length, (index) => Tab(text: articleTypeToString(_articleTypes[index])));
+    myTabs = List.generate(_articleTypes.length,
+        (index) => Tab(text: articleTypeToString(_articleTypes[index])));
     return DefaultTabController(
       length: myTabs.length,
       child: Scaffold(

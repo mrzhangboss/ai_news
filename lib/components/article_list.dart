@@ -40,6 +40,7 @@ class _ArticleListState extends State<ArticleList> {
         print('滑动到了最底部');
         await _getMore();
       }
+
     });
   }
 
@@ -67,15 +68,23 @@ class _ArticleListState extends State<ArticleList> {
         isLoading = false;
       });
     }
+  }
 
+  Widget _getEmptyWidget() {
+    return widget.type != ArticleType.like && widget.type != ArticleType.dislike
+        ? const Center(child: CircularProgressIndicator())
+        : const Center(
+            child: Text(
+            '暂无文章',
+            style: TextStyle(fontSize: 24, color: Colors.grey),
+          ));
   }
 
   @override
   Widget build(BuildContext context) {
-    final tagProvider = Provider.of<TagProvider>(context, listen: true);
     final model = Provider.of<ArticleProvider>(context, listen: false);
-    final String currentSearch = Provider.of<CommonProvider>(context, listen: true).currentSearch;
-    final String currentTag = tagProvider.currentTag;
+    final String currentSearch =
+        Provider.of<CommonProvider>(context, listen: true).currentSearch;
     return Container(
       decoration: BoxDecoration(color: Colors.grey[200]),
       padding: const EdgeInsets.all(8.0),
@@ -86,7 +95,7 @@ class _ArticleListState extends State<ArticleList> {
           if (widget.type == ArticleType.all) const TagList(),
           Expanded(
               child: articles.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? _getEmptyWidget()
                   : RefreshIndicator(
                       onRefresh: () async {
                         model.refreshHotArticles(widget.type);
@@ -125,24 +134,27 @@ class _ArticleListState extends State<ArticleList> {
   Widget _getMoreWidget() {
     return isOver
         ? Container()
-        : const Center(
-            child: Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    '加载中...',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                  CircularProgressIndicator(
-                    strokeWidth: 1.0,
-                  )
-                ],
+        : InkWell(
+          onTap: () => _getMore(),
+          child: const Center(
+              child: Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      '加载中...',
+                      style: TextStyle(fontSize: 16.0),
+                    ),
+                    CircularProgressIndicator(
+                      strokeWidth: 1.0,
+                    )
+                  ],
+                ),
               ),
             ),
-          );
+        );
   }
 
   Future _getMore() async {

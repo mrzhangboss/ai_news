@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../components/multi_select_checkbox_list.dart';
@@ -36,11 +37,8 @@ class _DetailPageState extends State<DetailPage> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
-      ..setNavigationDelegate(NavigationDelegate(
-        onProgress: (int progress) {
-          // Update loading bar.
-        },
-      ));
+      ..setUserAgent(
+          "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36");
   }
 
   @override
@@ -119,6 +117,22 @@ class _DetailPageState extends State<DetailPage> {
     setState(() {});
   }
 
+  final Map<ArticleType, List<String>> forbidUrls = {
+    ArticleType.zhihu: ['https://www.zhihu.com/oia/'],
+    ArticleType.juejin: ['https://z.juejin.cn'],
+    ArticleType.three6Ke: ['https://wzyd.statchannel.top/a'],
+    ArticleType.bilibili: [' https://dl.hdslb.com/mobile'],
+    ArticleType.douban: ['https://www.douban.com/doubanapp', 'http://andariel.douban.com/d'],
+    ArticleType.huXiu: ['http://pkg.huxiucdn.com', 'https://m.huxiu.com/download'],
+    ArticleType.huPu: ['https://games.mobileapi.hupu.com'],
+  };
+
+  final Map<ArticleType, List<String>> supportApp = {
+    ArticleType.bilibili: ['bilibili:'],
+
+  };
+
+
   @override
   Widget build(BuildContext context) {
     final ArticleRank articleRank =
@@ -129,6 +143,43 @@ class _DetailPageState extends State<DetailPage> {
     article = articleRank.article.value!;
     if (!loaded) {
       loaded = true;
+      _controller.setNavigationDelegate(NavigationDelegate(
+          onNavigationRequest: (NavigationRequest request) async {
+        print('begin ${article.type} ${request.url}');
+        // 白名单
+        if (supportApp.containsKey(article.type)) {
+          for (var url in supportApp[article.type]!) {
+            if (request.url.startsWith(url)) {
+              if (!await launchUrl(Uri.parse(request.url))) {
+                print('Could not launch ${request.url}');
+              }
+              return NavigationDecision.navigate;
+            }
+          }
+        }
+        if (request.url.startsWith("bilibili:")) {
+
+        }
+
+        // 黑名单
+        if (request.url.startsWith('https:') || request.url.startsWith('http:')) {
+          if (forbidUrls.containsKey(article.type)) {
+            for (var url in forbidUrls[article.type]!) {
+              if (request.url.startsWith(url)) {
+                return NavigationDecision.prevent;
+              }
+            }
+          }
+          return NavigationDecision.navigate;
+        }
+        return NavigationDecision.prevent;
+      }));
+      if (article.type == ArticleType.bilibili) {
+        // _controller.setJavaScriptMode(JavaScriptMode.disabled);
+      } else {
+        _controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+      }
+
       _controller.loadRequest(Uri.parse(article.url));
     }
     print(article.url);
