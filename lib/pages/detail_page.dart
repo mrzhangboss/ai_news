@@ -153,12 +153,8 @@ class _DetailPageState extends State<DetailPage> {
               if (!await launchUrl(Uri.parse(request.url))) {
                 print('Could not launch ${request.url}');
               }
-              return NavigationDecision.navigate;
             }
           }
-        }
-        if (request.url.startsWith("bilibili:")) {
-
         }
 
         // 黑名单
