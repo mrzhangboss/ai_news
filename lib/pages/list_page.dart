@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../components/article_list.dart';
+import '../components/recommend_article_list.dart';
 import '../database/constant.dart';
 import '../utils/version_utils.dart';
 
@@ -41,10 +42,16 @@ class _ListPageState extends State<ListPage> {
   }
 
   Widget buildTabBarView(ArticleType articleType) {
-    return ArticleList(
-      key: tabKeys[_articleTypes.indexOf(articleType)],
-      type: articleType,
-    );
+    final key = tabKeys[_articleTypes.indexOf(articleType)];
+    return articleType == ArticleType.all
+        ? RecommendArticleList(
+            key: key,
+            type: articleType,
+          )
+        : ArticleList(
+            key: key,
+            type: articleType,
+          );
   }
 
   @override

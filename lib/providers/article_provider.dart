@@ -1,4 +1,3 @@
-import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
@@ -18,13 +17,11 @@ class ArticleProvider extends ChangeNotifier {
 
   ArticleProvider(this.isar);
 
-
-
   Stream<Article?> getArticleStream(int id) {
     return isar.articles.watchObject(id);
   }
 
-  List<ArticleRank> lastRecommend = [];
+  List<Article> lastRecommend = [];
 
   Future<List<Article>> getArticleByStatus(
       ArticleStatus status, int limit) async {
@@ -89,35 +86,24 @@ class ArticleProvider extends ChangeNotifier {
           .limit(size)
           .findAll();
     }
-
-    // recommend articles
-    if (lastRecommend.isNotEmpty) {
-      List<Article?> articles = await isar.articles
-          .getAll(lastRecommend.map((e) => e.article.value!.id).toList());
-      await isar.writeTxn(() async {
-        articles.forEach((element) async {
-          if (element != null) {
-            if (element.status == ArticleStatus.unread) {
-              element.status = ArticleStatus.read;
-              await isar.articles.put(element);
-            }
-          }
-        });
-      });
-    }
-    final res = await getRecommendArticles();
-
-    // 获取当前未阅读的文章
-    return res;
+    return Future.value([]);
   }
 
-  Future<List<ArticleRank>> getRecommendArticles() async {
-    String cacheKey = 'aiRecommend';
+  List<Article> getLastRecommend() {
+    return isar.articles.filter().hadTaggedEqualTo(true).sortByUpdateAtDesc().limit(15).findAllSync();
+  }
+
+  final String cacheKey = 'aiRecommend';
+
+  Stream<Article> getRecommendArticlesWithStream() async* {
     DateTime? lastUpdate = await getLastCacheTime(cacheKey);
     if (lastUpdate != null &&
         lastUpdate.add(const Duration(seconds: 60)).isAfter(DateTime.now())) {
       print('cache $cacheKey $lastUpdate ');
-      return Future.value(lastRecommend);
+      for (var x in lastRecommend) {
+        yield x;
+      }
+      return;
     }
     saveLastCacheTime(cacheKey);
     // 获取当前未阅读的文章
@@ -134,14 +120,27 @@ class ArticleProvider extends ChangeNotifier {
     List<Tag> likeTag = await getTagByType(OpinionType.like, 10);
     List<Tag> dislikeTag = await getTagByType(OpinionType.dislike, 10);
 
-    List<Article> articles = await AiProvider.getAiRecommend(
-        unreadArticles,
-        clickedArticles,
-        dislikeArticles,
-        likeArticles,
-        normalTag,
-        likeTag,
-        dislikeTag);
+    yield* AiProvider.getAiRecommendStream(unreadArticles, clickedArticles,
+        dislikeArticles, likeArticles, normalTag, likeTag, dislikeTag);
+  }
+
+  Future<void> streamComplete(List<Article> articles) async {
+    // recommend articles
+    if (lastRecommend.isNotEmpty) {
+      List<Article?> articles =
+          await isar.articles.getAll(lastRecommend.map((e) => e.id).toList());
+      await isar.writeTxn(() async {
+        articles.forEach((element) async {
+          if (element != null) {
+            if (element.status == ArticleStatus.unread) {
+              element.status = ArticleStatus.read;
+              element.updateAt = DateTime.now();
+              await isar.articles.put(element);
+            }
+          }
+        });
+      });
+    }
 
     // save
     if (articles.isNotEmpty) {
@@ -151,11 +150,10 @@ class ArticleProvider extends ChangeNotifier {
     }
 
     // fake rank
-    final res = buildRankByArticles(articles);
-    lastRecommend = res;
+    lastRecommend = articles;
     clearLastCacheTime(cacheKey);
-    return res;
   }
+
 
   ZhihuParser zhihuParser = ZhihuParser();
   ToutiaoParser toutiaoParser = ToutiaoParser();
@@ -320,5 +318,13 @@ class ArticleProvider extends ChangeNotifier {
       await isar.articles.put(article);
     });
     notifyListeners();
+  }
+
+  void saveArticleContent(Article article, String content) async {
+    await isar.writeTxn(() async {
+      article.updateAt = DateTime.now();
+      article.content.content = content;
+      await isar.articles.put(article);
+    });
   }
 }

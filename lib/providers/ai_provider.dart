@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:ai_news/database/constant.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 
 import '../database/article_model.dart';
 import 'package:http/http.dart' as http;
@@ -15,15 +16,14 @@ const String systemRecommendPrompt = """
 ## 技能
 ### 文章推荐
 1. 用户会告诉你最近点击过的喜欢的、讨厌的文章和来源以及感兴趣的、喜欢的、讨厌的文章主题，同时提供需要推荐的文章标题、来源、文章 ID 列表，每篇文章用 --- 分割
-2. 从这批文章中，按照用户喜好的推荐出num篇文章个数，输出文章的id
-3. 并总结推荐的这些文章的4个主题，使用逗号,分割
+2. 从这批文章中，按照用户喜好的推荐出num篇文章个数，输出文章的id，并且总结推荐文章的4个主题，使用空格分隔主题
+
 
 ## 输出
-以 CSV 列表形式输出，格式如下：
+每个推荐的格式以<开始，> 结束，格式如下：文章id 后面使用 : 分隔
 =====
-<用户给出的文章 id1>,<用户给出的文章 id2>
-<主题1>,<主题2>,<主题3>,,<主题4>
-=====
+<文章id: 主题1 主题2 主题4 主题4>
+=====;
 
 ## 限制
 - 必须严格遵循给定的格式进行输出，确保毫无偏差。
@@ -56,7 +56,7 @@ class AiProvider extends ChangeNotifier {
     }
   }
 
-  static Future<List<Article>> getAiRecommend(
+  static Stream<Article> getAiRecommendStream(
       List<Article> articles,
       List<Article> clickArticles,
       List<Article> dislikeArticles,
@@ -64,9 +64,12 @@ class AiProvider extends ChangeNotifier {
       List<Tag> normalTag,
       List<Tag> likeTag,
       List<Tag> dislikeTag,
-      [int recommendCount = 15]) async {
-    final token = EncryptUtils.decryptString('Gjfwjw xp-ijk2909615kg422if9f1kg0k419hkfh5', 5);
-    final url = EncryptUtils.decryptString("kwwsv://gdvkvfrsh.dolbxqfv.frp/frpsdwleoh-prgh/y1/fkdw/frpsohwlrqv", 3);
+      [int recommendCount = 15]) async* {
+    final token = EncryptUtils.decryptString(
+        'Gjfwjw xp-ijk2909615kg422if9f1kg0k419hkfh5', 5);
+    final url = EncryptUtils.decryptString(
+        "kwwsv://gdvkvfrsh.dolbxqfv.frp/frpsdwleoh-prgh/y1/fkdw/frpsohwlrqv",
+        3);
 
     final headers = {
       "Authorization": token,
@@ -103,6 +106,7 @@ class AiProvider extends ChangeNotifier {
 
     final data = {
       "model": "qwen-long",
+      "stream": true,
       "messages": [
         {"role": "system", "content": system},
         {"role": "user", "content": lines.join('\n')}
@@ -112,43 +116,38 @@ class AiProvider extends ChangeNotifier {
       print(x);
     }
     final start = DateTime.now().millisecondsSinceEpoch;
-    final response = await http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: jsonEncode(data),
-    );
-    final end = DateTime.now().millisecondsSinceEpoch;
-    List<Article> recommendArticles = [];
+    final client = http.Client();
+    Request request = Request('POST', Uri.parse(url));
+    request.headers.addAll(headers);
+    request.body = json.encode(data);
+    final response = await client.send(request);
+    List<String> left = [];
     if (response.statusCode == 200) {
-      print("Response: ${(end - start) / 1000.0} seconds");
-      var json = jsonDecode(utf8.decode(response.bodyBytes));
-      print(json);
-      if (json['choices'] != null && json['choices'].length > 0) {
-        var content = json['choices'][0]['message']['content'];
-        final res = content.replaceAll('=====', '').trim().split('\n');
-        for (int i = 0; i < res.length; i++) {
-          var item = res[i];
-          final ss = item.split(',');
-          if (ss.length == recommendCount && i + 1 < res.length) {
-            print("recommend id $item");
-            print("tag id ${ss[i + 1]}");
-            for (int j = 0; j < recommendCount; j++) {
-              final recommendId = ss[j];
-              var index;
-              try {
-                index = int.parse(recommendId);
-                if (index < articles.length) {
-                  var article = articles[index];
-                  ArticleCategory articleCategory = ArticleCategory();
-                  articleCategory.categories.addAll(res[i + 1].split(','));
-                  article.category = articleCategory;
-                  article.hadTagged = true;
-                  recommendArticles.add(article);
-                }
-              } catch (e) {
-                print("error $item $e");
-                continue;
+      await for (var chunk in response.stream.transform(utf8.decoder)) {
+        for (var line in chunk.split('\n')) {
+          final end = DateTime.now().millisecondsSinceEpoch;
+          print("Response: ${(end - start) / 1000.0} seconds");
+          line = line.replaceFirst("data:", '').trim();
+          if (line.isEmpty) {
+            continue;
+          }
+          line = line.trim();
+          if (line.startsWith("[DONE]")) {
+            return;
+          } else {
+            // 文章格式 <1:人家 国家 列表>
+            try {
+              final data = jsonDecode(line);
+              // print(data);
+              final content = data['choices'][0]['delta']['content'];
+              print(content);
+              left.add(content);
+              Article? a = buildArticle(left, articles);
+              if (a != null) {
+                yield a;
               }
+            } catch (e) {
+              print('error $e $chunk');
             }
           }
         }
@@ -156,7 +155,54 @@ class AiProvider extends ChangeNotifier {
     } else {
       print('Request failed with status: ${response.statusCode}');
     }
+  }
 
-    return recommendArticles;
+  static Article? buildArticle(List<String> left, List<Article> articles) {
+    String line = left.join();
+    int start = 0, end = line.length;
+    while (start < end) {
+      if (line[start] == '<') {
+        int i = start + 1;
+        while (i < end && line[i] != ':') {
+          i++;
+        }
+        if (i == end) {
+          break;
+        }
+        String id = line.substring(start + 1, i).replaceAll('\s', '').trim();
+        int wordStart = i + 1;
+        int wordEnd = i + 1;
+        while (wordEnd < end && line[wordEnd] != '>') {
+          wordEnd++;
+        }
+        if (wordEnd != end) {
+          try {
+            List<String> categories =
+                line.substring(wordStart, wordEnd).split('\s+');
+            left.clear();
+            left.add(line.substring(wordEnd));
+            var index = int.parse(id);
+            if (index < articles.length) {
+              var article = articles[index];
+              ArticleCategory articleCategory = ArticleCategory();
+              articleCategory.categories.addAll(categories);
+              article.category = articleCategory;
+              article.hadTagged = true;
+              article.updateAt = DateTime.now();
+              return article;
+            }
+          } catch (e) {
+            print(e);
+            left.clear();
+            left.add(line.substring(wordEnd));
+          }
+        }
+        return null;
+      } else {
+        start += 1;
+      }
+    }
+
+    return null;
   }
 }

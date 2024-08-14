@@ -2,17 +2,13 @@ import 'package:ai_news/providers/tag_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
 import '../components/multi_select_checkbox_list.dart';
 import '../database/article_model.dart';
 import '../database/constant.dart';
-import '../models/news.dart';
 import '../providers/article_provider.dart';
-import '../services/data_services.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage({
@@ -37,7 +33,8 @@ class _DetailPageState extends State<DetailPage> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
-      ..setUserAgent("Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36");
+      ..setUserAgent(
+          "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36");
   }
 
   @override
@@ -121,24 +118,51 @@ class _DetailPageState extends State<DetailPage> {
     ArticleType.juejin: ['https://z.juejin.cn'],
     ArticleType.three6Ke: ['https://wzyd.statchannel.top/a'],
     ArticleType.bilibili: [' https://dl.hdslb.com/mobile'],
-    ArticleType.douban: ['https://www.douban.com/doubanapp', 'http://andariel.douban.com/d'],
-    ArticleType.huXiu: ['http://pkg.huxiucdn.com', 'https://m.huxiu.com/download'],
+    ArticleType.douban: [
+      'https://www.douban.com/doubanapp',
+      'http://andariel.douban.com/d'
+    ],
+    ArticleType.huXiu: [
+      'http://pkg.huxiucdn.com',
+      'https://m.huxiu.com/download'
+    ],
     ArticleType.huPu: ['https://games.mobileapi.hupu.com'],
   };
 
   final Map<ArticleType, List<String>> supportApp = {
     ArticleType.bilibili: ['bilibili:'],
-
   };
 
+  static const String zhihuJs = """
+          
+var header = document.getElementsByClassName('css-rg1dmv');
+if (header) {
+    header[0].parentNode.remove();
+    document.getElementsByClassName('OpenInAppButton')[0].style.display='none'
+}
+
+
+function removeClass() {
+    var list = document.getElementsByClassName('Button--secondary');
+    for (let i = 0; i < list.length; i++) {
+     console.log(list[i].classList); // 对每个元素执行操作
+     //list[i].classList.remove('MobileModal-wrapper');
+     // list[i].remove();
+     list[i].click();
+    } 
+}
+
+
+let intervalId = setInterval(removeClass, 200);     
+            
+            """;
   final Map<ArticleType, String> articleJS = {
-    ArticleType.zhihu: "document.getElementsByClassName('OpenInAppButton')[0].style.display='none'",
+    ArticleType.zhihu: zhihuJs,
   };
 
   final Set<ArticleType> forbidJs = {
     ArticleType.huXiu,
   };
-
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +174,7 @@ class _DetailPageState extends State<DetailPage> {
     article = articleRank.article.value!;
     if (!loaded) {
       loaded = true;
+
       _controller.setNavigationDelegate(NavigationDelegate(
           onNavigationRequest: (NavigationRequest request) async {
         print('begin ${article.type} ${request.url}');
@@ -165,7 +190,8 @@ class _DetailPageState extends State<DetailPage> {
         }
 
         // 黑名单
-        if (request.url.startsWith('https:') || request.url.startsWith('http:')) {
+        if (request.url.startsWith('https:') ||
+            request.url.startsWith('http:')) {
           if (forbidUrls.containsKey(article.type)) {
             for (var url in forbidUrls[article.type]!) {
               if (request.url.startsWith(url)) {
@@ -176,15 +202,12 @@ class _DetailPageState extends State<DetailPage> {
           return NavigationDecision.navigate;
         }
         return NavigationDecision.prevent;
-      },
-          onPageFinished: (url) async {
-            if (articleJS.containsKey(article.type)) {
-              await _controller.runJavaScript(articleJS[article.type]!);
-            }
-          }
-      ),
+      }, onPageFinished: (url) async {
+        if (articleJS.containsKey(article.type)) {
+          await _controller.runJavaScript(articleJS[article.type]!);
+        }
+      }));
 
-      );
       if (forbidJs.contains(article.type)) {
         _controller.setJavaScriptMode(JavaScriptMode.disabled);
       } else {
