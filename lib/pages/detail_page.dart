@@ -166,12 +166,8 @@ let intervalId = setInterval(removeClass, 200);
 
   @override
   Widget build(BuildContext context) {
-    final ArticleRank articleRank =
-        ModalRoute.of(context)!.settings.arguments as ArticleRank;
-    if (articleRank.article.value == null) {
-      articleRank.article.loadSync();
-    }
-    article = articleRank.article.value!;
+    final Article article =
+        ModalRoute.of(context)!.settings.arguments as Article;
     if (!loaded) {
       loaded = true;
 

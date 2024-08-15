@@ -1,4 +1,4 @@
-# Released v3.0.4
+# Released v3.0.5
 
 1. 预加载文章
 2. ai 文章流式相应

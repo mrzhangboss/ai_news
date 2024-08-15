@@ -121,7 +121,7 @@ class _ArticleListState extends State<ArticleList> {
                               onTap: () {
                                 model.clickedArticle(article, widget.type);
                                 Navigator.pushNamed(context, '/detail',
-                                    arguments: articles[index]);
+                                    arguments: article);
                               },
                             );
                           }),
